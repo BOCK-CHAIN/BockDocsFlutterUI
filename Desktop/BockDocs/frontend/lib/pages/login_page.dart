@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -65,7 +65,7 @@ class _LoginPageState extends State<LoginPage> {
                     labelStyle: TextStyle(color: textSecondary),
                     prefixIcon: Icon(Icons.email_outlined, color: primaryColor),
                     filled: true,
-                    fillColor: theme.colorScheme.background,
+                    fillColor: theme.colorScheme.surface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(color: theme.dividerColor),
@@ -101,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
                       },
                     ),
                     filled: true,
-                    fillColor: theme.colorScheme.background,
+                    fillColor: theme.colorScheme.surface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(color: theme.dividerColor),

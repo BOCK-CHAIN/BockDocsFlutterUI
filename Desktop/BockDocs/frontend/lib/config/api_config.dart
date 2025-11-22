@@ -2,37 +2,328 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiConfig {
-  static const String baseUrl = 'http://localhost:5000/api';
+  static const String baseUrl = 'http://localhost:5050/api';
 
-  // Function to create a share link
-  static Future<String?> createShareLink(String docId, String permission, int expiresIn) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/documents/share/$docId'), // Fixed: added /documents
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'permission': permission,
-          'expiresIn': expiresIn,
-        }),
-      );
+  static String? _authToken;
+  static String? _userId;
 
-      print('Share link response status: ${response.statusCode}');
-      print('Share link response body: ${response.body}');
+  static String? get userId => _userId;
+  static bool get isAuthenticated => _authToken != null;
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['shareUrl'];
-      } else {
-        print('Error creating share link: ${response.body}');
-        return null;
+  static void setAuthToken(String token, int userId) {
+    _authToken = token;
+    _userId = userId.toString();
+  }
+
+  static void clearAuth() {
+    _authToken = null;
+    _userId = null;
+  }
+
+  static Map<String, String> _getHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      if (_authToken != null) 'Authorization': 'Bearer $_authToken',
+    };
+  }
+
+  // ==================== AUTH ENDPOINTS ====================
+
+  static Future<Map<String, dynamic>> login(String email, String password) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/signin'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'email': email, 'password': password}),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      setAuthToken(data['token'], data['user']['id']);
+      return data;
+    }
+
+    throw Exception(data['error'] ?? 'Failed to sign in');
+  }
+
+  static Future<Map<String, dynamic>> signup(String name, String email, String password) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/signup'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'name': name, 'email': email, 'password': password}),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 201) {
+      setAuthToken(data['token'], data['user']['id']);
+      return data;
+    }
+
+    throw Exception(data['error'] ?? 'Failed to create account');
+  }
+
+  static Future<Map<String, dynamic>> googleSignIn(String idToken) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/auth/google'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'idToken': idToken}),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      setAuthToken(data['token'], data['user']['id']);
+      return data;
+    }
+
+    throw Exception(data['error'] ?? 'Failed to sign in with Google');
+  }
+
+  static Future<Map<String, dynamic>> currentUser() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/auth/me'),
+      headers: _getHeaders(),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      if (data['id'] != null) {
+        _userId ??= data['id'].toString();
       }
-    } catch (e) {
-      print('Exception creating share link: $e');
-      return null;
+      return data;
+    }
+
+    throw Exception(data['error'] ?? 'Failed to load profile');
+  }
+
+  static Future<Map<String, dynamic>> updateProfile({String? name, String? email}) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/auth/profile'),
+      headers: _getHeaders(),
+      body: jsonEncode({'name': name, 'email': email}),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data['user'];
+    }
+
+    throw Exception(data['error'] ?? 'Failed to update profile');
+  }
+
+  static Future<void> logout() async {
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/auth/logout'),
+        headers: _getHeaders(),
+      );
+    } finally {
+      clearAuth();
     }
   }
 
-  // Get shared document by token
+  static Future<Map<String, dynamic>> forgotPassword(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/forgot-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email}),
+      );
+
+      // Check if response is JSON
+      if (response.headers['content-type']?.contains('application/json') != true) {
+        throw Exception('Server returned non-JSON response. Make sure the backend server is running on port 5050.');
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200) {
+        return data;
+      }
+
+      throw Exception(data['error'] ?? 'Failed to send password reset email');
+    } catch (e) {
+      if (e is FormatException) {
+        throw Exception('Server connection error. Please ensure the backend server is running on port 5050.');
+      }
+      rethrow;
+    }
+  }
+
+  static Future<Map<String, dynamic>> resetPassword(String token, String newPassword) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/auth/reset-password'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'token': token, 'newPassword': newPassword}),
+      );
+
+      // Check if response is JSON
+      if (response.headers['content-type']?.contains('application/json') != true) {
+        throw Exception('Server returned non-JSON response. Make sure the backend server is running on port 5050.');
+      }
+
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+
+      if (response.statusCode == 200) {
+        return data;
+      }
+
+      throw Exception(data['error'] ?? 'Failed to reset password');
+    } catch (e) {
+      if (e is FormatException) {
+        throw Exception('Server connection error. Please ensure the backend server is running on port 5050.');
+      }
+      rethrow;
+    }
+  }
+
+  // ==================== DOCUMENT ENDPOINTS ====================
+
+  static Future<Map<String, dynamic>> createDocument(String title, String content) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/documents/create'),
+      headers: _getHeaders(),
+      body: jsonEncode({'title': title, 'content': content}),
+    );
+
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body);
+    }
+
+    final data = jsonDecode(response.body);
+    throw Exception(data['error'] ?? 'Failed to create document');
+  }
+
+  static Future<Map<String, dynamic>> getDocument(String docId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/documents/$docId'),
+      headers: _getHeaders(),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data;
+    }
+
+    throw Exception(data['error'] ?? 'Failed to load document');
+  }
+
+  static Future<List<dynamic>> getUserDocuments() async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/documents'),
+      headers: _getHeaders(),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data;
+    }
+
+    throw Exception(data['error'] ?? 'Failed to load documents');
+  }
+
+  static Future<bool> saveDocument(String docId, String title, String content, {String? shareToken}) async {
+    final headers = _getHeaders();
+    
+    // Build request body
+    final body = <String, dynamic>{
+      'title': title,
+      'content': content,
+    };
+    
+    // Add share token if provided (for shared documents)
+    if (shareToken != null && shareToken.isNotEmpty) {
+      body['shareToken'] = shareToken;
+      print('Saving with share token: $shareToken'); // Debug log
+    }
+    
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/documents/save/$docId'),
+        headers: headers,
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      }
+
+      // Try to parse error response
+      try {
+        final data = jsonDecode(response.body);
+        throw Exception(data['error'] ?? 'Failed to save document');
+      } catch (e) {
+        // If response is not JSON, use the status message
+        throw Exception('Failed to save document: ${response.statusCode} ${response.reasonPhrase}');
+      }
+    } catch (e) {
+      print('Save document error: $e');
+      rethrow;
+    }
+  }
+
+  static Future<bool> deleteDocument(String docId) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/documents/delete/$docId'),
+      headers: _getHeaders(),
+    );
+
+    if (response.statusCode == 200) {
+      return true;
+    }
+
+    final data = jsonDecode(response.body);
+    throw Exception(data['error'] ?? 'Failed to delete document');
+  }
+
+  // ==================== SHARE ENDPOINTS ====================
+
+  static Future<String?> createShareLink(String docId, String permission, int expiresIn) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/documents/share/$docId'),
+      headers: _getHeaders(),
+      body: jsonEncode({'permission': permission, 'expiresIn': expiresIn}),
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200) {
+      return data['shareUrl'];
+    }
+
+    throw Exception(data['error'] ?? 'Failed to create share link');
+  }
+
+  static Future<bool> shareDocumentWithEmail(String docId, String email, String permission) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/documents/share/$docId/email'),
+        headers: _getHeaders(),
+        body: jsonEncode({
+          'email': email.trim(),
+          'permission': permission,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        return data['success'] == true;
+      }
+
+      throw Exception(data['error'] ?? 'Failed to share document with email');
+    } catch (e) {
+      print('Share with email error: $e');
+      return false;
+    }
+  }
+
   static Future<Map<String, dynamic>?> getSharedDocument(String token) async {
     try {
       final response = await http.get(
@@ -40,140 +331,13 @@ class ApiConfig {
         headers: {'Content-Type': 'application/json'},
       );
 
-      print('Get shared document response: ${response.statusCode}');
-      print('Get shared document body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      } else if (response.statusCode == 404) {
-        print('Share link not found or invalid');
-        return null;
-      } else if (response.statusCode == 403) {
-        print('Share link expired');
-        return null;
-      } else {
-        print('Error getting shared document: ${response.body}');
-        return null;
-      }
-    } catch (e) {
-      print('Exception getting shared document: $e');
-      return null;
-    }
-  }
-
-  // Share document with a specific email
-  static Future<bool> shareDocumentWithEmail(
-      String docId, String email, String permission) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/documents/share-email/$docId'), // Fixed: added /documents and /$docId
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'permission': permission,
-        }),
-      );
-
-      print('Share with email response: ${response.statusCode}');
-      print('Share with email body: ${response.body}');
-
-      return response.statusCode == 200;
-    } catch (e) {
-      print('Exception sharing with email: $e');
-      return false;
-    }
-  }
-
-  // Create a new document
-  static Future<Map<String, dynamic>?> createDocument(int userId, String title, String content) async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/documents/create'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'userId': userId,
-          'title': title,
-          'content': content,
-        }),
-      );
-
-      if (response.statusCode == 201) {
-        return jsonDecode(response.body);
-      }
-      return null;
-    } catch (e) {
-      print('Exception creating document: $e');
-      return null;
-    }
-  }
-
-  // Get document by ID
-  static Future<Map<String, dynamic>?> getDocument(String docId) async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/documents/$docId'),
-        headers: {'Content-Type': 'application/json'},
-      );
-
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       }
       return null;
     } catch (e) {
-      print('Exception getting document: $e');
+      print('Get shared document error: $e');
       return null;
-    }
-  }
-
-  // Get all documents for a user
-  static Future<List<dynamic>?> getUserDocuments(int userId) async {
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/documents/user/$userId'),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      }
-      return null;
-    } catch (e) {
-      print('Exception getting user documents: $e');
-      return null;
-    }
-  }
-
-  // Update/save document
-  static Future<bool> saveDocument(String docId, String title, String content) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/documents/save/$docId'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'title': title,
-          'content': content,
-        }),
-      );
-
-      return response.statusCode == 200;
-    } catch (e) {
-      print('Exception saving document: $e');
-      return false;
-    }
-  }
-
-  // Delete document
-  static Future<bool> deleteDocument(String docId) async {
-    try {
-      final response = await http.delete(
-        Uri.parse('$baseUrl/documents/delete/$docId'),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      return response.statusCode == 200;
-    } catch (e) {
-      print('Exception deleting document: $e');
-      return false;
     }
   }
 }

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class ShareDialog extends StatefulWidget {
   final String documentId;
 
-  const ShareDialog({Key? key, required this.documentId}) : super(key: key);
+  const ShareDialog({super.key, required this.documentId});
 
   @override
   State<ShareDialog> createState() => _ShareDialogState();

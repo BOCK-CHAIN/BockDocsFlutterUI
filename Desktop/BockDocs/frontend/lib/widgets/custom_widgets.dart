@@ -9,23 +9,31 @@ class BockDocsAppBar extends StatelessWidget implements PreferredSizeWidget {
   final bool showBackButton;
 
   const BockDocsAppBar({
-    Key? key,
+    super.key,
     required this.title,
     this.actions,
     this.leading,
     this.showBackButton = false,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final appBarBg = theme.appBarTheme.backgroundColor ?? colorScheme.surface;
+    final appBarFg =
+        theme.appBarTheme.foregroundColor ?? colorScheme.onSurface;
+    final shadowColor =
+        theme.appBarTheme.shadowColor ?? theme.shadowColor.withOpacity(0.2);
+
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: appBarBg,
       elevation: 1,
-      shadowColor: Colors.black.withOpacity(0.1),
+      shadowColor: shadowColor,
       leading: leading ??
           (showBackButton
               ? IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Color(0xFF1F2937)),
+                  icon: Icon(Icons.arrow_back, color: appBarFg),
                   onPressed: () => Navigator.pop(context),
                 )
               : null),
@@ -35,19 +43,24 @@ class BockDocsAppBar extends StatelessWidget implements PreferredSizeWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF9333EA).withOpacity(0.1),
+              color: colorScheme.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.description, color: Color(0xFF9333EA), size: 24),
+            child: Icon(Icons.description, color: colorScheme.primary, size: 24),
           ),
           const SizedBox(width: 12),
           Text(
             title,
-            style: const TextStyle(
-              color: Color(0xFF1F2937),
-              fontWeight: FontWeight.bold,
-              fontSize: 22,
-            ),
+            style: theme.textTheme.titleLarge?.copyWith(
+                  color: appBarFg,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                ) ??
+                TextStyle(
+                  color: appBarFg,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                ),
           ),
         ],
       ),
@@ -70,7 +83,7 @@ class BockDocsButton extends StatelessWidget {
   final double height;
 
   const BockDocsButton({
-    Key? key,
+    super.key,
     required this.text,
     required this.onPressed,
     this.isPrimary = true,
@@ -78,33 +91,42 @@ class BockDocsButton extends StatelessWidget {
     this.isLoading = false,
     this.width,
     this.height = 52,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final primaryColor = colorScheme.primary;
+    final onPrimaryColor = colorScheme.onPrimary;
+    final secondaryBg = theme.colorScheme.surface;
+    final secondaryFg = theme.colorScheme.onSurface;
+
     return SizedBox(
       width: width,
       height: height,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: isPrimary ? const Color(0xFF9333EA) : Colors.white,
-          foregroundColor: isPrimary ? Colors.white : const Color(0xFF1F2937),
+          backgroundColor: isPrimary ? primaryColor : secondaryBg,
+          foregroundColor: isPrimary ? onPrimaryColor : secondaryFg,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: isPrimary
                 ? BorderSide.none
-                : const BorderSide(color: Color(0xFFE5E7EB)),
+                : BorderSide(color: theme.dividerColor),
           ),
         ),
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    isPrimary ? onPrimaryColor : secondaryFg,
+                  ),
                 ),
               )
             : icon != null
@@ -124,10 +146,14 @@ class BockDocsButton extends StatelessWidget {
                   )
                 : Text(
                     text,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: theme.textTheme.labelLarge?.copyWith(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ) ??
+                        const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
       ),
     );
@@ -146,7 +172,7 @@ class DocumentCard extends StatelessWidget {
   final Color? iconColor;
 
   const DocumentCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.subtitle,
     required this.onTap,
@@ -155,10 +181,23 @@ class DocumentCard extends StatelessWidget {
     this.onStarPressed,
     this.icon = Icons.description,
     this.iconColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final cardColor = theme.cardColor;
+    final borderColor = theme.dividerColor;
+    final textPrimary =
+        theme.textTheme.bodyLarge?.color ?? colorScheme.onSurface;
+    final textSecondary =
+        theme.textTheme.bodyMedium?.color ?? colorScheme.onSurface.withOpacity(0.7);
+    final shadowColor = theme.shadowColor.withOpacity(
+      theme.brightness == Brightness.dark ? 0.25 : 0.08,
+    );
+    final resolvedIconColor = iconColor ?? colorScheme.primary;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -166,12 +205,12 @@ class DocumentCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: borderColor),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: shadowColor,
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -182,12 +221,12 @@ class DocumentCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: (iconColor ?? const Color(0xFF9333EA)).withOpacity(0.1),
+                color: resolvedIconColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
                 icon,
-                color: iconColor ?? const Color(0xFF9333EA),
+                color: resolvedIconColor,
                 size: 24,
               ),
             ),
@@ -198,21 +237,21 @@ class DocumentCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Color(0xFF1F2937),
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                          fontSize: 15,
+                          color: textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF9CA3AF),
-                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 13,
+                          color: textSecondary,
+                        ),
                   ),
                 ],
               ),
@@ -221,13 +260,13 @@ class DocumentCard extends StatelessWidget {
               IconButton(
                 icon: Icon(
                   isStarred ? Icons.star : Icons.star_border,
-                  color: isStarred ? Colors.amber : const Color(0xFF9CA3AF),
+                  color: isStarred ? Colors.amber : textSecondary,
                 ),
                 onPressed: onStarPressed,
               ),
             if (onMorePressed != null)
               IconButton(
-                icon: const Icon(Icons.more_vert, color: Color(0xFF9CA3AF)),
+                icon: Icon(Icons.more_vert, color: textSecondary),
                 onPressed: onMorePressed,
               ),
           ],
@@ -245,15 +284,24 @@ class TemplateCard extends StatelessWidget {
   final Color color;
 
   const TemplateCard({
-    Key? key,
+    super.key,
     required this.icon,
     required this.label,
     required this.onTap,
     this.color = const Color(0xFF9333EA),
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cardColor = theme.cardColor;
+    final borderColor = theme.dividerColor;
+    final textColor =
+        theme.textTheme.bodyMedium?.color ?? theme.colorScheme.onSurface;
+    final shadowColor = theme.shadowColor.withOpacity(
+      theme.brightness == Brightness.dark ? 0.25 : 0.1,
+    );
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -261,12 +309,12 @@ class TemplateCard extends StatelessWidget {
         width: 140,
         height: 170,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: borderColor),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: shadowColor,
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -286,11 +334,11 @@ class TemplateCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               label,
-              style: const TextStyle(
-                color: Color(0xFF1F2937),
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-              ),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 14,
+                  ),
             ),
           ],
         ),
@@ -307,15 +355,27 @@ class FolderCard extends StatelessWidget {
   final VoidCallback? onMorePressed;
 
   const FolderCard({
-    Key? key,
+    super.key,
     required this.name,
     required this.subtitle,
     required this.onTap,
     this.onMorePressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final cardColor = theme.cardColor;
+    final borderColor = theme.dividerColor;
+    final textPrimary =
+        theme.textTheme.titleSmall?.color ?? colorScheme.onSurface;
+    final textSecondary =
+        theme.textTheme.bodySmall?.color ?? colorScheme.onSurface.withOpacity(0.7);
+    final shadowColor = theme.shadowColor.withOpacity(
+      theme.brightness == Brightness.dark ? 0.25 : 0.08,
+    );
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -323,12 +383,12 @@ class FolderCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: borderColor),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: shadowColor,
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -339,12 +399,12 @@ class FolderCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF59E0B).withOpacity(0.1),
+                color: colorScheme.tertiary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.folder,
-                color: Color(0xFFF59E0B),
+                color: colorScheme.tertiary,
                 size: 24,
               ),
             ),
@@ -355,28 +415,28 @@ class FolderCard extends StatelessWidget {
                 children: [
                   Text(
                     name,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: Color(0xFF1F2937),
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                          fontSize: 15,
+                          color: textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF9CA3AF),
-                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 13,
+                          color: textSecondary,
+                        ),
                   ),
                 ],
               ),
             ),
             if (onMorePressed != null)
               IconButton(
-                icon: const Icon(Icons.more_vert, color: Color(0xFF9CA3AF)),
+                icon: Icon(Icons.more_vert, color: textSecondary),
                 onPressed: onMorePressed,
               ),
           ],
@@ -399,7 +459,7 @@ class BockDocsTextField extends StatelessWidget {
   final int maxLines;
 
   const BockDocsTextField({
-    Key? key,
+    super.key,
     required this.controller,
     required this.label,
     this.prefixIcon,
@@ -409,10 +469,20 @@ class BockDocsTextField extends StatelessWidget {
     this.validator,
     this.onChanged,
     this.maxLines = 1,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textColor =
+        theme.textTheme.bodyLarge?.color ?? colorScheme.onSurface;
+    final labelColor =
+        theme.textTheme.bodyMedium?.color ?? colorScheme.onSurface.withOpacity(0.7);
+    final fillColor =
+        theme.inputDecorationTheme.fillColor ?? colorScheme.surface;
+    final dividerColor = theme.dividerColor;
+
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
@@ -420,35 +490,35 @@ class BockDocsTextField extends StatelessWidget {
       validator: validator,
       onChanged: onChanged,
       maxLines: maxLines,
-      style: const TextStyle(color: Color(0xFF1F2937)),
+      style: TextStyle(color: textColor),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF6B7280)),
+        labelStyle: TextStyle(color: labelColor),
         prefixIcon: prefixIcon != null
-            ? Icon(prefixIcon, color: const Color(0xFF9333EA))
+            ? Icon(prefixIcon, color: colorScheme.primary)
             : null,
         suffixIcon: suffixIcon,
         filled: true,
-        fillColor: const Color(0xFFF9FAFB),
+        fillColor: fillColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderSide: BorderSide(color: dividerColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          borderSide: BorderSide(color: dividerColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF9333EA), width: 2),
+          borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red),
+          borderSide: BorderSide(color: colorScheme.error),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red, width: 2),
+          borderSide: BorderSide(color: colorScheme.error, width: 2),
         ),
       ),
     );
@@ -459,25 +529,30 @@ class BockDocsTextField extends StatelessWidget {
 class BockDocsLoadingIndicator extends StatelessWidget {
   final String? message;
 
-  const BockDocsLoadingIndicator({Key? key, this.message}) : super(key: key);
+  const BockDocsLoadingIndicator({super.key, this.message});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textSecondary =
+        theme.textTheme.bodyMedium?.color ?? colorScheme.onSurface.withOpacity(0.7);
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9333EA)),
+          CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(colorScheme.primary),
           ),
           if (message != null) ...[
             const SizedBox(height: 16),
             Text(
               message!,
-              style: const TextStyle(
-                color: Color(0xFF6B7280),
-                fontSize: 14,
-              ),
+              style: theme.textTheme.bodySmall?.copyWith(
+                    color: textSecondary,
+                    fontSize: 14,
+                  ),
             ),
           ],
         ],
@@ -495,16 +570,26 @@ class EmptyState extends StatelessWidget {
   final VoidCallback? onActionPressed;
 
   const EmptyState({
-    Key? key,
+    super.key,
     required this.icon,
     required this.title,
     required this.subtitle,
     this.actionText,
     this.onActionPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final titleStyle = theme.textTheme.titleMedium?.copyWith(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        );
+    final subtitleStyle = theme.textTheme.bodyMedium?.copyWith(
+          fontSize: 14,
+        );
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -514,32 +599,25 @@ class EmptyState extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: const Color(0xFF9333EA).withOpacity(0.1),
+                color: colorScheme.primary.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
                 size: 64,
-                color: const Color(0xFF9333EA),
+                color: colorScheme.primary,
               ),
             ),
             const SizedBox(height: 24),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1F2937),
-              ),
+              style: titleStyle,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               subtitle,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF6B7280),
-              ),
+              style: subtitleStyle,
               textAlign: TextAlign.center,
             ),
             if (actionText != null && onActionPressed != null) ...[
@@ -560,18 +638,29 @@ class EmptyState extends StatelessWidget {
 class ContextMenu extends StatelessWidget {
   final List<ContextMenuItem> items;
 
-  const ContextMenu({Key? key, required this.items}) : super(key: key);
+  const ContextMenu({super.key, required this.items});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final cardColor = theme.cardColor;
+    final dividerColor = theme.dividerColor;
+    final textPrimary =
+        theme.textTheme.bodyMedium?.color ?? colorScheme.onSurface;
+    final textSecondary = textPrimary.withOpacity(0.7);
+    final shadowColor = theme.shadowColor.withOpacity(
+      theme.brightness == Brightness.dark ? 0.4 : 0.15,
+    );
+
     return Container(
       width: 200,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardColor,
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: shadowColor,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -581,7 +670,7 @@ class ContextMenu extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: items.map((item) {
           if (item.isDivider) {
-            return const Divider(height: 1, thickness: 1);
+            return Divider(height: 1, thickness: 1, color: dividerColor);
           }
           return InkWell(
             onTap: () {
@@ -596,8 +685,8 @@ class ContextMenu extends StatelessWidget {
                     item.icon,
                     size: 20,
                     color: item.isDestructive
-                        ? Colors.red
-                        : const Color(0xFF6B7280),
+                        ? colorScheme.error
+                        : textSecondary,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -606,8 +695,8 @@ class ContextMenu extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         color: item.isDestructive
-                            ? Colors.red
-                            : const Color(0xFF1F2937),
+                            ? colorScheme.error
+                            : textPrimary,
                       ),
                     ),
                   ),
@@ -640,8 +729,12 @@ class ContextMenu extends StatelessWidget {
                 item.icon,
                 size: 20,
                 color: item.isDestructive
-                    ? Colors.red
-                    : const Color(0xFF6B7280),
+                    ? Theme.of(context).colorScheme.error
+                    : Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.color
+                        ?.withOpacity(0.7),
               ),
               const SizedBox(width: 12),
               Text(
@@ -649,8 +742,8 @@ class ContextMenu extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   color: item.isDestructive
-                      ? Colors.red
-                      : const Color(0xFF1F2937),
+                      ? Theme.of(context).colorScheme.error
+                      : Theme.of(context).textTheme.bodyMedium?.color,
                 ),
               ),
             ],
@@ -699,32 +792,35 @@ class DialogHelper {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           title,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1F2937),
-          ),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
         ),
         content: Text(
           message,
-          style: const TextStyle(
-            fontSize: 14,
-            color: Color(0xFF6B7280),
-          ),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               cancelText,
-              style: const TextStyle(color: Color(0xFF6B7280)),
+              style: TextStyle(
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.7),
+              ),
             ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  isDestructive ? Colors.red : const Color(0xFF9333EA),
+              backgroundColor: isDestructive
+                  ? Theme.of(context).colorScheme.error
+                  : Theme.of(context).colorScheme.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -751,11 +847,10 @@ class DialogHelper {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           title,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1F2937),
-          ),
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
         ),
         content: TextField(
           controller: controller,
@@ -767,7 +862,10 @@ class DialogHelper {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFF9333EA), width: 2),
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.primary,
+                width: 2,
+              ),
             ),
           ),
         ),
@@ -776,13 +874,19 @@ class DialogHelper {
             onPressed: () => Navigator.pop(context),
             child: Text(
               cancelText,
-              style: const TextStyle(color: Color(0xFF6B7280)),
+              style: TextStyle(
+                color: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.color
+                    ?.withOpacity(0.7),
+              ),
             ),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, controller.text),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF9333EA),
+              backgroundColor: Theme.of(context).colorScheme.primary,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -800,10 +904,11 @@ class DialogHelper {
     bool isError = false,
     Duration duration = const Duration(seconds: 3),
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Colors.red : const Color(0xFF10B981),
+        backgroundColor: isError ? colorScheme.error : colorScheme.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         duration: duration,
@@ -820,33 +925,41 @@ class SearchBar extends StatelessWidget {
   final VoidCallback? onClear;
 
   const SearchBar({
-    Key? key,
+    super.key,
     required this.controller,
     this.hint = 'Search documents...',
     this.onChanged,
     this.onClear,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textColor =
+        theme.textTheme.bodyMedium?.color ?? theme.colorScheme.onSurface;
+    final hintColor = textColor.withOpacity(0.6);
+    final fillColor =
+        theme.inputDecorationTheme.fillColor ?? theme.colorScheme.surface;
+    final borderColor = theme.dividerColor;
+
     return Container(
       height: 48,
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: fillColor,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: borderColor),
       ),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
-        style: const TextStyle(color: Color(0xFF1F2937)),
+        style: TextStyle(color: textColor),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: const TextStyle(color: Color(0xFF9CA3AF)),
-          prefixIcon: const Icon(Icons.search, color: Color(0xFF6B7280)),
+          hintStyle: TextStyle(color: hintColor),
+          prefixIcon: Icon(Icons.search, color: hintColor),
           suffixIcon: controller.text.isNotEmpty
               ? IconButton(
-                  icon: const Icon(Icons.clear, color: Color(0xFF6B7280)),
+                  icon: Icon(Icons.clear, color: hintColor),
                   onPressed: () {
                     controller.clear();
                     onClear?.call();
@@ -870,23 +983,26 @@ class BockDocsChip extends StatelessWidget {
   final VoidCallback? onDelete;
 
   const BockDocsChip({
-    Key? key,
+    super.key,
     required this.label,
     this.icon,
     this.color,
     this.onTap,
     this.onDelete,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final resolvedColor = color ?? theme.colorScheme.primary;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: (color ?? const Color(0xFF9333EA)).withOpacity(0.1),
+          color: resolvedColor.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -896,7 +1012,7 @@ class BockDocsChip extends StatelessWidget {
               Icon(
                 icon,
                 size: 16,
-                color: color ?? const Color(0xFF9333EA),
+                color: resolvedColor,
               ),
               const SizedBox(width: 4),
             ],
@@ -905,7 +1021,7 @@ class BockDocsChip extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: color ?? const Color(0xFF9333EA),
+                color: resolvedColor,
               ),
             ),
             if (onDelete != null) ...[
@@ -915,7 +1031,7 @@ class BockDocsChip extends StatelessWidget {
                 child: Icon(
                   Icons.close,
                   size: 16,
-                  color: color ?? const Color(0xFF9333EA),
+                  color: resolvedColor,
                 ),
               ),
             ],
@@ -934,12 +1050,12 @@ class BockDocsAvatar extends StatelessWidget {
   final VoidCallback? onTap;
 
   const BockDocsAvatar({
-    Key? key,
+    super.key,
     this.imageUrl,
     this.name,
     this.size = 40,
     this.onTap,
-  }) : super(key: key);
+  });
 
   String _getInitials() {
     if (name == null || name!.isEmpty) return 'U';
@@ -952,18 +1068,22 @@ class BockDocsAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bgColor = theme.colorScheme.primary;
+    final textColor = theme.colorScheme.onPrimary;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(size / 2),
       child: CircleAvatar(
         radius: size / 2,
-        backgroundColor: const Color(0xFF9333EA),
+        backgroundColor: bgColor,
         backgroundImage: imageUrl != null ? NetworkImage(imageUrl!) : null,
         child: imageUrl == null
             ? Text(
                 _getInitials(),
                 style: TextStyle(
-                  color: Colors.white,
+                  color: textColor,
                   fontSize: size / 2.5,
                   fontWeight: FontWeight.w600,
                 ),

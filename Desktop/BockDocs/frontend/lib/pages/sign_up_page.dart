@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class SignUpPage extends StatefulWidget {
-  const SignUpPage({Key? key}) : super(key: key);
+  const SignUpPage({super.key});
 
   @override
   State<SignUpPage> createState() => _SignUpPageState();
@@ -69,7 +69,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     labelStyle: TextStyle(color: textSecondary),
                     prefixIcon: Icon(Icons.person_outline, color: primaryColor),
                     filled: true,
-                    fillColor: theme.colorScheme.background,
+                    fillColor: theme.colorScheme.surface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(color: theme.dividerColor),
@@ -93,7 +93,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     labelStyle: TextStyle(color: textSecondary),
                     prefixIcon: Icon(Icons.email_outlined, color: primaryColor),
                     filled: true,
-                    fillColor: theme.colorScheme.background,
+                    fillColor: theme.colorScheme.surface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(color: theme.dividerColor),
@@ -127,7 +127,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       },
                     ),
                     filled: true,
-                    fillColor: theme.colorScheme.background,
+                    fillColor: theme.colorScheme.surface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(color: theme.dividerColor),
@@ -161,7 +161,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       },
                     ),
                     filled: true,
-                    fillColor: theme.colorScheme.background,
+                    fillColor: theme.colorScheme.surface,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(color: theme.dividerColor),

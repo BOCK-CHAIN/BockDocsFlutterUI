@@ -5,7 +5,7 @@ import '../theme_provider.dart';
 import '../widgets/custom_widgets.dart'; // assuming you have DocumentCard and TemplateCard here
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -19,91 +19,153 @@ class _HomePageState extends State<HomePage> {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 1,
         shadowColor: Colors.black.withOpacity(0.1),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(Icons.description, color: Theme.of(context).primaryColor, size: 24),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'BockDocs',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
-            ),
-          ],
+        title: Text(
+          'BockDocs',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
         actions: [
-          IconButton(
-            icon: Icon(Icons.search, color: Theme.of(context).colorScheme.secondary),
-            onPressed: () {},
-          ),
-          PopupMenuButton<String>(
-            icon: Icon(Icons.settings_outlined, color: Theme.of(context).colorScheme.secondary),
-            onSelected: (value) {
-              if (value == 'settings') {
-                Navigator.pushNamed(context, '/settings');
-              }
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, _) {
+              final theme = Theme.of(context);
+              return PopupMenuButton<String>(
+                icon: Icon(
+                  themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                  size: 20,
+                  color: theme.appBarTheme.foregroundColor ?? theme.colorScheme.onSurface,
+                ),
+                onSelected: (value) {
+                  if (value == 'theme') {
+                    themeProvider.toggleTheme();
+                  } else if (value == 'search') {
+                    // Handle search
+                  } else if (value == 'settings') {
+                    Navigator.pushNamed(context, '/settings');
+                  } else if (value == 'profile') {
+                    Navigator.pushNamed(context, '/settings');
+                  } else if (value == 'logout') {
+                    Navigator.pushReplacementNamed(context, '/login');
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'theme',
+                    child: Row(
+                      children: [
+                        Icon(
+                          themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(themeProvider.isDarkMode ? 'Light Mode' : 'Dark Mode'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'search',
+                    child: Row(
+                      children: [
+                        Icon(Icons.search, size: 20),
+                        const SizedBox(width: 12),
+                        const Text('Search'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'settings',
+                    child: Row(
+                      children: [
+                        Icon(Icons.settings_outlined, size: 20),
+                        const SizedBox(width: 12),
+                        const Text('Settings'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  PopupMenuItem(
+                    value: 'profile',
+                    child: Row(
+                      children: [
+                        Icon(Icons.person, size: 20),
+                        const SizedBox(width: 12),
+                        const Text('Profile'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        Icon(Icons.logout, size: 20, color: Colors.red),
+                        const SizedBox(width: 12),
+                        const Text('Logout', style: TextStyle(color: Colors.red)),
+                      ],
+                    ),
+                  ),
+                ],
+              );
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'settings', child: Text('Settings')),
-            ],
-          ),
-          PopupMenuButton<String>(
-            icon: CircleAvatar(
-              backgroundColor: Theme.of(context).primaryColor,
-              child: const Text('U', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-            ),
-            onSelected: (value) {
-              if (value == 'logout') {
-                Navigator.pushReplacementNamed(context, '/login');
-              } else if (value == 'profile') {
-                Navigator.pushNamed(context, '/settings');
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'profile', child: Text('Profile')),
-              const PopupMenuItem(value: 'logout', child: Text('Logout')),
-            ],
           ),
         ],
       ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
-          children: [
+          children: <Widget>[
             DrawerHeader(
-              decoration: BoxDecoration(color: Theme.of(context).primaryColor),
-              child: const Text('BockDocs', style: TextStyle(color: Colors.white, fontSize: 24)),
+              decoration: BoxDecoration(
+                color: Theme.of(context).primaryColor,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: <Widget>[
+                  Icon(Icons.description, color: Colors.white, size: 40),
+                  SizedBox(height: 16),
+                  Text(
+                    'BockDocs',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
             ),
             ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Home'),
-              onTap: () => Navigator.pop(context),
+              leading: Icon(Icons.home),
+              title: Text('Home'),
+              onTap: () {
+                Navigator.pop(context);
+              },
             ),
             ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
+              leading: Icon(Icons.settings),
+              title: Text('Settings'),
               onTap: () {
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/settings');
               },
             ),
             SwitchListTile(
-              title: const Text('Dark Mode'),
+              title: Text('Dark Mode'),
               value: themeProvider.isDarkMode,
-              onChanged: (val) => themeProvider.toggleTheme(),
+              onChanged: (bool value) {
+                themeProvider.toggleTheme();
+              },
               secondary: Icon(
                 themeProvider.isDarkMode ? Icons.dark_mode : Icons.light_mode,
-                color: Theme.of(context).primaryColor,
               ),
             ),
           ],
@@ -117,7 +179,14 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Start a new document', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                Text(
+                  'Start a new document',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
                 const SizedBox(height: 20),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -162,7 +231,14 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                const Text('Recent documents', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                Text(
+                  'Recent documents',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
                 // Add your DocumentCard list here or reuse your existing document list with updated widget
               ],
             ),
