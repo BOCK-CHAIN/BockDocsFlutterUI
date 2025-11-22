@@ -17,7 +17,12 @@ import 'package:provider/provider.dart';
 import 'theme_provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
-void main() => runApp(const BockDocsApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Load saved API base URL if available
+  await ApiConfig.loadSavedBaseUrl();
+  runApp(const BockDocsApp());
+}
 
 class BockDocsApp extends StatelessWidget {
   const BockDocsApp({super.key});

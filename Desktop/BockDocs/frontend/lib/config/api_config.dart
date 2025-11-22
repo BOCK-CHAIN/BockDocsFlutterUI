@@ -1,8 +1,89 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiConfig {
-  static const String baseUrl = 'http://localhost:5050/api';
+  // Default configuration
+  static const String _defaultLocalUrl = 'http://localhost:5050/api';
+  
+  // For iOS Simulator: use localhost (simulators can access localhost)
+  // For physical iOS devices: use your computer's local IP address
+  // Find it using: ifconfig (Mac/Linux) or ipconfig (Windows)
+  // Example: 'http://192.168.1.100:5050/api'
+  // For production, update this to your deployed backend URL
+  static const String _defaultMobileDevUrl = 'http://localhost:5050/api';
+  
+  static String? _customBaseUrl;
+  static String? _baseUrl;
+  
+  // Get the base URL based on platform and environment
+  static String get baseUrl {
+    if (_baseUrl != null) return _baseUrl!;
+    
+    // Check if custom URL is set
+    if (_customBaseUrl != null) {
+      _baseUrl = _customBaseUrl;
+      return _baseUrl!;
+    }
+    
+    // Platform-specific logic
+    if (kIsWeb) {
+      // Web: use localhost
+      _baseUrl = _defaultLocalUrl;
+    } else if (Platform.isIOS) {
+      // iOS Simulator: can access localhost directly
+      // For physical devices, you may need to use your computer's IP address
+      _baseUrl = _defaultLocalUrl; // localhost:5050
+    } else if (Platform.isAndroid) {
+      // Android: use mobile dev URL (IP address for physical devices)
+      // For Android emulator, localhost works but you may need 10.0.2.2
+      _baseUrl = _defaultMobileDevUrl;
+    } else {
+      // Desktop: use localhost
+      _baseUrl = _defaultLocalUrl;
+    }
+    
+    return _baseUrl!;
+  }
+  
+  // Set a custom base URL (useful for settings/preferences)
+  static Future<void> setBaseUrl(String? url) async {
+    _customBaseUrl = url;
+    _baseUrl = url;
+    
+    // Save to preferences for persistence
+    if (url != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('api_base_url', url);
+    } else {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('api_base_url');
+    }
+  }
+  
+  // Load saved base URL from preferences
+  static Future<void> loadSavedBaseUrl() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedUrl = prefs.getString('api_base_url');
+      if (savedUrl != null && savedUrl.isNotEmpty) {
+        _customBaseUrl = savedUrl;
+        _baseUrl = savedUrl;
+      }
+    } catch (e) {
+      print('Error loading saved base URL: $e');
+    }
+  }
+  
+  // Reset to default URL
+  static Future<void> resetBaseUrl() async {
+    _customBaseUrl = null;
+    _baseUrl = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('api_base_url');
+  }
 
   static String? _authToken;
   static String? _userId;
