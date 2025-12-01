@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+  <!-- Google Sign-In Client ID for Web -->
+  <meta name="google-signin-client_id" content="905403783172-0da236stbhj0ceieaunatkhu91sg6efv.apps.googleusercontent.com">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="frontend">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>frontend</title>
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+  <!-- EmailJS for sending emails directly from browser -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    // Initialize EmailJS
+    (function() {
+      if (typeof emailjs !== 'undefined') {
+        // EmailJS will be initialized with public key when sending
+        console.log('EmailJS loaded');
+      }
+    })();
+    
+    // Suppress Google Sign-In console warnings (they're harmless)
+    if (typeof console !== 'undefined') {
+      const originalWarn = console.warn;
+      console.warn = function(...args) {
+        // Filter out the gapi.client warning
+        if (args[0] && typeof args[0] === 'string' && args[0].includes('gapi.client')) {
+          return; // Suppress this specific warning
+        }
+        originalWarn.apply(console, args);
+      };
+    }
+  </script>
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
